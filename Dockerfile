@@ -1,21 +1,30 @@
 #　JMusicBot JP Docker container configuration file
 #  Maintained by CyberRex (CyberRex0)
 #  Edited by kichirouhoshino for JMusicBot-JPtoEN
+#  Updated by Voop (VoopLV)
 
-FROM openjdk:11-buster
+FROM alpine:latest
 
-# DO NOT EDIT UNDER THIS LINE
 RUN mkdir -p /opt/jmusicbot
+
+RUN mkdir /clean
 
 WORKDIR /opt/jmusicbot
 
-RUN \
-    echo "JMusicBot-JP Docker Container Builder v1.1\nMaintained by CyberRex (CyberRex0)"; \
-    echo "Preconfiguring apt..." & apt-get update > /dev/null; \
-    echo "Installing packages..." & apt-get install -y ffmpeg wget curl jq > /dev/null; \
-    echo "Downloading latest version of JMusicBot-JP..."; \
-    wget $(curl https://api.github.com/repos/kichirouhoshino/JMusicBot-JPtoEN/releases/latest | jq -r '.assets[] | select(.browser_download_url | contains(".jar")) | .browser_download_url') -O /opt/jmusicbot/jmusicbot.jar; \
-    echo "cd /opt/jmusicbot && java -Dnogui=true -jar jmusicbot.jar" > /opt/jmusicbot/execute.bash; \
-    echo "Build Completed."
+RUN apk update && apk add --no-cache bash openjdk21 supervisor fontconfig ttf-dejavu python3 && rm -rf /var/cache/apk/*
 
-CMD ["bash", "/opt/jmusicbot/execute.bash"]
+RUN mkdir /clean
+
+COPY docker/config_template.txtt /clean/config.txt
+
+COPY target/*-All.jar /opt/jmusicbot/app.jar+
+
+COPY docker/entrypoint.sh /entrypoint.sh
+
+COPY docker/supervisord.conf /opt/jmusicbot/supervisord.conf
+
+RUN chmod -R 755 /entrypoint.sh
+
+RUN chmod -R 755 /opt/jmusicbot/app.jar
+
+ENTRYPOINT ["/entrypoint.sh"]
