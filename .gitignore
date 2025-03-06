@@ -3,7 +3,6 @@
 /Playlists/
 /test/
 *.json
-*.txt
 nb*.xml
 .idea/**
 *.iml
